@@ -42,8 +42,8 @@ pipeline {
                 echo "🌐 Deploying Nagios container on remote server ..."
                 sh '''
                     echo "🧹 Cleaning up old Nagios container and image..."
-                    docker stop nagios || true
-                    docker rm nagios || true
+                    docker stop nagios521 || true
+                    docker rm nagios521 || true
                     docker rmi macnaer/nagios521 || true
 
                     echo "⬇️ Pulling latest Nagios image..."
