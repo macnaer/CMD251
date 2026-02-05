@@ -1,0 +1,74 @@
+#!groovy
+
+pipeline {
+    agent any
+
+    environment {
+        TELEGRAM_BOT_TOKEN = credentials('TELEGRAM_TOKEN') 
+        TELEGRAM_CHAT_ID   = credentials('CHAT_ID')
+    }
+
+    stages {
+        stage("Create Nagios image") {
+            steps {
+                echo '🧱 Building Nagios image ...'
+                sh "docker build --no-cache -t macnaer/nagios521 ."
+            }
+        }
+
+        stage("Docker login") {
+            steps {
+                echo "🔐 Logging in to DockerHub ..."
+                withCredentials([usernamePassword(credentialsId: 'DockerHub-Credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh '''
+                        docker login -u $USERNAME -p $PASSWORD
+                    '''
+                }
+            }
+        }
+
+        stage("Push Nagios to DockerHub") {
+            steps {
+                echo "🚀 Pushing Nagios image to DockerHub ..."
+                sh '''
+                    docker push macnaer/nagios521
+                '''
+            }
+        }
+
+        stage("Deploy Nagios on remote server") {
+            agent { label 'remote-docker' }
+            steps {
+                echo "🌐 Deploying Nagios container on remote server ..."
+                sh '''
+                    echo "🧹 Cleaning up old Nagios container and image..."
+                    docker stop nagios521 || true
+                    docker rm nagios521 || true
+                    docker rmi macnaer/nagios521 || true
+
+                    echo "⬇️ Pulling latest Nagios image..."
+                    docker pull macnaer/nagios521
+
+                    echo "🚀 Starting new Nagios container..."
+                    docker run -d --name nagios521 --restart=always -p 0.0.0.0:8081:80   macnaer/nagios521
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                def message = currentBuild.result == 'SUCCESS' ? 
+                    "✅ Build completed CMD521: ${env.JOB_NAME} #${env.BUILD_NUMBER}" : 
+                    "❌ Build failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+
+                sh """
+                    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                        -d chat_id=${TELEGRAM_CHAT_ID} \
+                        -d text='${message}'
+                """
+            }
+        }
+    }
+}
