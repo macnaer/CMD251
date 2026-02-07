@@ -4,8 +4,8 @@ pipeline {
     agent any
 
     environment {
-        TELEGRAM_BOT_TOKEN_CMD521 = credentials('TELEGRAM_BOT_TOKEN_CMD521') 
-        TELEGRAM_CHAT_ID_CMD521   = credentials('TELEGRAM_CHAT_ID_CMD521')
+        TELEGRAM_BOT_TOKEN = credentials('TELEGRAM_BOT_TOKEN_CMD521') 
+        TELEGRAM_CHAT_ID   = credentials('TELEGRAM_CHAT_ID')
     }
 
     stages {
@@ -64,8 +64,8 @@ pipeline {
                     "❌ Build failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
 
                 sh """
-                    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN_CMD521}/sendMessage" \
-                        -d chat_id=${TELEGRAM_CHAT_ID_CMD521} \
+                    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                        -d chat_id=${TELEGRAM_CHAT_ID} \
                         -d text='${message}'
                 """
             }
