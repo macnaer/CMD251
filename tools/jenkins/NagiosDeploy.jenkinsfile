@@ -4,8 +4,8 @@ pipeline {
     agent any
 
     environment {
-        TELEGRAM_BOT_TOKEN_CMD521 = credentials('TELEGRAM_TOKEN') 
-        TELEGRAM_CHAT_ID_CMD521   = credentials('CHAT_ID')
+        TELEGRAM_BOT_TOKEN_CMD521 = credentials('TELEGRAM_BOT_TOKEN_CMD521') 
+        TELEGRAM_CHAT_ID_CMD521   = credentials('TELEGRAM_CHAT_ID_CMD521')
     }
 
     stages {
